@@ -1,61 +1,111 @@
 <pre>
 <?php
     class cipher{
-        public $alphabet;
-        public $atbash;
-        public $A1Z26;
-        //public $caesar = array('X','Y','Z','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W');
+        protected $message;
+        protected $decode = false;
         
-        public function __construct(){
+        private $alphabet;
+        private $atbash;
+        private $atbashA1Z26;
+        private $A1Z26;
+        private $caesar;
+        private $caesarA1Z26;
+        
+        public function __construct($message = 'DEFAULT'){
+            $this->message = $message;
             $this->alphabet = range('A','Z');
             $this->atbash = array_reverse($this->alphabet);
+            $this->atbashA1Z26 = array_flip($this->atbash);
             $this->A1Z26 = array_flip($this->alphabet);
+            $this->caesar = array_merge(range('X','Z'),range('A','W'));
+            $this->caesarA1Z26 = array_flip($this->caesar);
         }
         
-        public function mask($code,$decode = false,$key = 'A'){
-            return ($decode === false) ? ord($code) : chr($code);
-        }
-        
-        public function A1Z26($message,$decode = false){
-            $array = array();
+        public function chrord(){
+            foreach((($this->decode === true) ? explode('%',$this->message) : str_split($this->message)) AS $code){
+                $array[] = ($this->decode === true) ?  chr($code) : ord($code);
+            }
             
-            foreach((($decode === true) ? explode('|',$message) : str_split($message)) AS $code){
-                switch($decode){
-                    case true:
-                        $code = $this->mask($code,true);
-                        echo $this->alphabet[$code].'<br>';
-                        if(array_key_exists(strtoupper($code),$this->alphabet)){
-                            //$array[] = $this->mask($this->A1Z26[strtoupper($code)],true);
-                        }
-                        elseif(in_array($code,$this->alphabet)){
-                            $array[] = $this->mask($this->alphabet[$code],true);
-                        }
-                        else{
-                            $array[] = $code;
-                        }
-                        break;
-                    case false:
-                        if(in_array(strtoupper($code),$this->alphabet)){
-                            $array[] = $this->mask($this->A1Z26[strtoupper($code)]);
-                        }
-                        elseif(array_key_exists($code,$this->alphabet)){
-                            $array[] = $this->mask($this->alphabet[$code]);
-                        }
-                        else{
-                            $array[] = $this->mask($code);
-                        }
-                        break;
+            $this->message = implode((($this->decode === true) ? '' : '%'),$array);
+            
+            return $this;
+        }
+        
+        public function A1Z26(){
+            foreach((($this->decode === true) ? explode('-',$this->message) : str_split($this->message)) AS $code){
+                if(array_key_exists(strtoupper($code),$this->alphabet) && $this->decode === true){
+                    $array[] = $this->alphabet[$code];
+                }
+                elseif(array_key_exists(strtoupper($code),$this->A1Z26)){
+                    $array[] = $this->A1Z26[strtoupper($code)];
+                }
+                else{
+                    $array[] = $code;
                 }
             }
             
-            return implode((($decode === true) ? '' : '|'),$array);
+            $this->message = implode((($this->decode === true) ? '' : '-'),$array);
+            
+            return $this;
+        }
+        
+        public function base64(){
+            $this->message = ($this->decode === true) ? base64_decode($this->message) : base64_encode($this->message);
+            
+            return $this;
+        }
+        
+        public function caesar(){
+            foreach(str_split($this->message) AS $code){
+                if(array_key_exists(strtoupper($code),$this->caesarA1Z26) && $this->decode === true){
+                    $array[] = (ctype_upper($code) === true) ? $this->alphabet[$this->caesarA1Z26[strtoupper($code)]] : strtolower($this->alphabet[$this->caesarA1Z26[strtoupper($code)]]);
+                }
+                
+                elseif(array_key_exists(strtoupper($code),$this->A1Z26)){
+                    $array[] = (ctype_upper($code) === true) ? $this->caesar[$this->A1Z26[strtoupper($code)]] : strtolower($this->caesar[$this->A1Z26[strtoupper($code)]]);
+                }
+                
+                else{
+                    $array[] = $code;
+                }
+            }
+            
+            $this->message = implode('',$array);
+            
+            return $this;
+        }
+        
+        public function caesarA1Z26(){
+            foreach(str_split($this->message) AS $code){
+                if(array_key_exists(strtoupper($code),$this->caesarA1Z26) && $this->decode === true){
+                    $array[] = (ctype_upper($code) === true) ? $this->alphabet[$this->caesarA1Z26[strtoupper($code)]] : strtolower($this->alphabet[$this->caesarA1Z26[strtoupper($code)]]);
+                }
+                
+                elseif(array_key_exists(strtoupper($code),$this->A1Z26)){
+                    $array[] = (ctype_upper($code) === true) ? $this->caesar[$this->A1Z26[strtoupper($code)]] : strtolower($this->caesar[$this->A1Z26[strtoupper($code)]]);
+                }
+                
+                else{
+                    $array[] = $code;
+                }
+            }
+            
+            $this->message = implode('',$array);
+            
+            return $this;
+        }
+        
+        public function getMessage(){
+            return $this->message;
+        }
+        
+        public function toggleDecode(){
+            $this->decode = ($this->decode === true) ? false : true;
+            
+            return $this;
         }
     }
-    //echo (ord(strtoupper('A')) - ord('A') + 1);
-    $cipher = new cipher;
-    $var = $cipher->mask($cipher->A1Z26['Z']);
-    echo $var.'<br>';
-    echo $cipher->mask($var,true).'<br>';
-    echo $cipher->alphabet[$cipher->mask($var,true)];
-    //$var = $cipher->A1Z26('HI THERE!');
-    //echo $cipher->A1Z26($var,true);
+    
+    $cipher = new cipher('I\'m really bored...');
+    echo $cipher->A1Z26()->getMessage();
+    echo $cipher->toggleDecode()->A1Z26()->getMessage();

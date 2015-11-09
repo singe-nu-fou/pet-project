@@ -7,11 +7,11 @@
         }
     }
 
-    class Webpage{
+    class Webpage extends Template{
         public $anchorText, $myUrl;
 
         public function __construct(){
-            $template = new Template();
+            $this->getBreadcrumbNavigation();
         }
     }
 ?>
