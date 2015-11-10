@@ -56,7 +56,7 @@
                     data:{dataObj:JSON.stringify($('#contactForm').serializeArray())},
                     complete:function(response){
                         alert(response.responseText);
-                        //$('input').val('');
+                        $('input').val('');
                     }
                 });
             }
